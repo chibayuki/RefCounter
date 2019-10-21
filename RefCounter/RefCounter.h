@@ -58,19 +58,19 @@ public:
 	Ref(nullptr_t)
 	{
 		_Ptr = nullptr;
-		_Count = new size_t(0);
+		_Count = new size_t(1);
 	}
 
 	Ref(T* ptr)
 	{
 		_Ptr = ptr;
-		_Count = new size_t(_Ptr ? 1 : 0);
+		_Count = new size_t(1);
 	}
 
 	Ref(const T* ptr)
 	{
 		_Ptr = const_cast<T*>(ptr);
-		_Count = new size_t(_Ptr ? 1 : 0);
+		_Count = new size_t(1);
 	}
 
 	Ref(const T& val)
@@ -121,7 +121,7 @@ public:
 		_Decrease();
 
 		_Ptr = nullptr;
-		_Count = new size_t(0);
+		_Count = new size_t(1);
 
 		return *this;
 	}
