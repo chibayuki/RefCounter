@@ -6,11 +6,6 @@ using namespace std;
 
 #define bool_to_str(val) ((val) ? ("true") : ("false"))
 
-int f()
-{
-	return 61565;
-}
-
 int main()
 {
 	Ref<int> r1 = 42; // r1 指向值为 42 的 int 对象，等效于 Ref<int> r1 = new int(42);
