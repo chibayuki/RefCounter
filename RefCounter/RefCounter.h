@@ -40,25 +40,11 @@ private:
 		}
 	}
 
+public:
 	Ref()
 	{
 		_Ptr = nullptr;
 		_Count = new size_t(0);
-	}
-
-public:
-	Ref(const T* ptr = nullptr)
-	{
-		_Ptr = ptr;
-		_Count = new size_t(_Ptr ? 1 : 0);
-	}
-
-	Ref(const T& val)
-	{
-		_Ptr = new T();
-		_Count = new size_t(_Ptr ? 1 : 0);
-
-		*_Ptr = val;
 	}
 
 	Ref(const Ref& ref)
@@ -67,6 +53,34 @@ public:
 		_Count = ref._Count;
 
 		_Increase();
+	}
+
+	Ref(T* ptr)
+	{
+		_Ptr = ptr;
+		_Count = new size_t(_Ptr ? 1 : 0);
+	}
+
+	Ref(const T* ptr)
+	{
+		_Ptr = const_cast<T*>(ptr);
+		_Count = new size_t(_Ptr ? 1 : 0);
+	}
+
+	Ref(const T& val)
+	{
+		_Ptr = new T();
+		_Count = new size_t(1);
+
+		*_Ptr = val;
+	}
+
+	Ref(T&& val)
+	{
+		_Ptr = new T();
+		_Count = new size_t(1);
+
+		*_Ptr = val;
 	}
 
 	Ref& operator=(const Ref& ref)
@@ -91,6 +105,60 @@ public:
 		return *this;
 	}
 
+	Ref& operator=(T* ptr)
+	{
+		if (_Ptr == ptr)
+		{
+			return *this;
+		}
+
+		_Decrease();
+
+		_Ptr = ptr;
+		_Count = new size_t(1);
+
+		return *this;
+	}
+
+	Ref& operator=(const T* ptr)
+	{
+		if (_Ptr == ptr)
+		{
+			return *this;
+		}
+
+		_Decrease();
+
+		_Ptr = const_cast<T*>(ptr);
+		_Count = new size_t(1);
+
+		return *this;
+	}
+
+	Ref& operator=(const T& val)
+	{
+		_Decrease();
+
+		_Ptr = new T();
+		_Count = new size_t(1);
+
+		*_Ptr = val;
+
+		return *this;
+	}
+
+	Ref& operator=(T&& val)
+	{
+		_Decrease();
+
+		_Ptr = new T();
+		_Count = new size_t(1);
+
+		*_Ptr = val;
+
+		return *this;
+	}
+
 	~Ref()
 	{
 		_Decrease();
@@ -101,9 +169,29 @@ public:
 		return (_Ptr == ref._Ptr);
 	}
 
+	inline bool operator==(T* ptr) const
+	{
+		return (_Ptr == ptr);
+	}
+
+	inline bool operator==(const T* ptr) const
+	{
+		return (_Ptr == ptr);
+	}
+
 	inline bool operator!=(const Ref& ref) const
 	{
 		return (_Ptr != ref._Ptr);
+	}
+
+	inline bool operator!=(T* ptr) const
+	{
+		return (_Ptr != ptr);
+	}
+
+	inline bool operator!=(const T* ptr) const
+	{
+		return (_Ptr != ptr);
 	}
 
 	inline T& operator*()
