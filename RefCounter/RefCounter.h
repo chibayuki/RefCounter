@@ -11,6 +11,8 @@ RefCounter is released under the GPLv3 license
 
 #pragma once
 
+using namespace std;
+
 // 支持引用计数与垃圾回收的指针
 template <typename T> class Ref
 {
@@ -20,23 +22,21 @@ private:
 
 	inline void _Increase()
 	{
-		if (_Ptr)
-		{
-			(*_Count)++;
-		}
+		(*_Count)++;
 	}
 
 	inline void _Decrease()
 	{
-		if (_Ptr)
-		{
-			(*_Count)--;
+		(*_Count)--;
 
-			if (*_Count == 0)
+		if (*_Count == 0)
+		{
+			if (_Ptr)
 			{
 				delete _Ptr;
-				delete _Count;
 			}
+
+			delete _Count;
 		}
 	}
 
@@ -53,6 +53,12 @@ public:
 		_Count = ref._Count;
 
 		_Increase();
+	}
+
+	Ref(nullptr_t)
+	{
+		_Ptr = nullptr;
+		_Count = new size_t(0);
 	}
 
 	Ref(T* ptr)
@@ -101,6 +107,21 @@ public:
 		_Count = ref._Count;
 
 		_Increase();
+
+		return *this;
+	}
+
+	Ref& operator=(nullptr_t)
+	{
+		if (_Ptr == nullptr)
+		{
+			return *this;
+		}
+
+		_Decrease();
+
+		_Ptr = nullptr;
+		_Count = new size_t(0);
 
 		return *this;
 	}
@@ -169,6 +190,11 @@ public:
 		return (_Ptr == ref._Ptr);
 	}
 
+	inline bool operator==(nullptr_t) const
+	{
+		return (_Ptr == nullptr);
+	}
+
 	inline bool operator==(T* ptr) const
 	{
 		return (_Ptr == ptr);
@@ -182,6 +208,11 @@ public:
 	inline bool operator!=(const Ref& ref) const
 	{
 		return (_Ptr != ref._Ptr);
+	}
+
+	inline bool operator!=(nullptr_t) const
+	{
+		return (_Ptr != nullptr);
 	}
 
 	inline bool operator!=(T* ptr) const
