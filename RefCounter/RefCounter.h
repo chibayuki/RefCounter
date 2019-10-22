@@ -2,7 +2,7 @@
 Copyright © 2019 chibayuki@foxmail.com
 
 RefCounter
-Version 19.10.21.0000
+Version 19.10.22.0000
 
 This file is part of RefCounter
 
@@ -11,82 +11,160 @@ RefCounter is released under the GPLv3 license
 
 #pragma once
 
+#include <map>
+
 using namespace std;
 
+// 引用计数器
+class RefCounter
+{
+private:
+	static map<void*, size_t> _Obj;
+	using pair = map<void*, size_t>::value_type;
+	using iterator = map<void*, size_t>::iterator;
+
+protected:
+	RefCounter()
+	{
+	}
+
+	RefCounter(const RefCounter&)
+	{
+	}
+
+	RefCounter& operator=(const RefCounter&)
+	{
+		return *this;
+	}
+
+	virtual ~RefCounter()
+	{
+	}
+
+	size_t Increase(void* ptr)
+	{
+		if (_Obj.empty())
+		{
+			_Obj.insert(pair(ptr, 1));
+
+			return 1;
+		}
+		else
+		{
+			iterator i = _Obj.find(ptr);
+
+			if (i == _Obj.end())
+			{
+				_Obj.insert(pair(ptr, 1));
+
+				return 1;
+			}
+			else
+			{
+				i->second++;
+
+				return i->second;
+			}
+		}
+	}
+
+	size_t Decrease(void* ptr)
+	{
+		if (!_Obj.empty())
+		{
+			iterator i = _Obj.find(ptr);
+
+			if (i != _Obj.end())
+			{
+				if (i->second > 0)
+				{
+					i->second--;
+				}
+
+				size_t count = i->second;
+
+				if (count == 0)
+				{
+					_Obj.erase(i);
+				}
+
+				return count;
+			}
+		}
+
+		return 0;
+	}
+};
+
+map<void*, size_t> RefCounter::_Obj;
+
 // 支持引用计数与垃圾回收的指针
-template <typename T> class Ref
+template <typename T> class Ref : private RefCounter
 {
 private:
 	T* _Ptr;
-	size_t* _Count;
 
-	inline void _Increase()
+	void _Increase()
 	{
-		(*_Count)++;
+		Increase(_Ptr);
 	}
 
-	inline void _Decrease()
+	void _Decrease()
 	{
-		(*_Count)--;
-
-		if (*_Count == 0)
+		if (Decrease(_Ptr) == 0)
 		{
 			if (_Ptr)
 			{
 				delete _Ptr;
 			}
-
-			delete _Count;
 		}
 	}
 
 public:
-	Ref()
+	Ref() :
+		_Ptr(nullptr)
 	{
-		_Ptr = nullptr;
-		_Count = new size_t(0);
-	}
-
-	Ref(const Ref& ref)
-	{
-		_Ptr = ref._Ptr;
-		_Count = ref._Count;
-
 		_Increase();
 	}
 
-	Ref(nullptr_t)
+	Ref(const Ref& ref) :
+		_Ptr(ref._Ptr)
 	{
-		_Ptr = nullptr;
-		_Count = new size_t(1);
+		_Increase();
 	}
 
-	Ref(T* ptr)
+	Ref(nullptr_t) :
+		_Ptr(nullptr)
 	{
-		_Ptr = ptr;
-		_Count = new size_t(1);
+		_Increase();
 	}
 
-	Ref(const T* ptr)
+	Ref(T* ptr) :
+		_Ptr(ptr)
 	{
-		_Ptr = const_cast<T*>(ptr);
-		_Count = new size_t(1);
+		_Increase();
+	}
+
+	Ref(const T* ptr) :
+		_Ptr(ptr)
+	{
+		_Increase();
 	}
 
 	Ref(const T& val)
 	{
 		_Ptr = new T();
-		_Count = new size_t(1);
-
 		*_Ptr = val;
+
+		_Increase();
 	}
 
 	Ref(T&& val)
 	{
 		_Ptr = new T();
-		_Count = new size_t(1);
-
 		*_Ptr = val;
+
+		_Increase();
 	}
 
 	Ref& operator=(const Ref& ref)
@@ -96,15 +174,12 @@ public:
 			return *this;
 		}
 
-		if (_Ptr == ref._Ptr)
+		if (_Ptr != ref._Ptr)
 		{
-			return *this;
+			_Decrease();
+
+			_Ptr = ref._Ptr;
 		}
-
-		_Decrease();
-
-		_Ptr = ref._Ptr;
-		_Count = ref._Count;
 
 		_Increase();
 
@@ -113,45 +188,42 @@ public:
 
 	Ref& operator=(nullptr_t)
 	{
-		if (_Ptr == nullptr)
+		if (_Ptr != nullptr)
 		{
-			return *this;
+			_Decrease();
+
+			_Ptr = nullptr;
 		}
 
-		_Decrease();
-
-		_Ptr = nullptr;
-		_Count = new size_t(1);
+		_Increase();
 
 		return *this;
 	}
 
 	Ref& operator=(T* ptr)
 	{
-		if (_Ptr == ptr)
+		if (_Ptr != ptr)
 		{
-			return *this;
+			_Decrease();
+
+			_Ptr = ptr;
 		}
 
-		_Decrease();
-
-		_Ptr = ptr;
-		_Count = new size_t(1);
+		_Increase();
 
 		return *this;
 	}
 
 	Ref& operator=(const T* ptr)
 	{
-		if (_Ptr == ptr)
+		if (_Ptr != ptr)
 		{
-			return *this;
+			_Decrease();
+
+			_Ptr = const_cast<T*>(ptr);
 		}
 
-		_Decrease();
-
-		_Ptr = const_cast<T*>(ptr);
-		_Count = new size_t(1);
+		_Increase();
 
 		return *this;
 	}
@@ -161,9 +233,9 @@ public:
 		_Decrease();
 
 		_Ptr = new T();
-		_Count = new size_t(1);
-
 		*_Ptr = val;
+
+		_Increase();
 
 		return *this;
 	}
@@ -173,14 +245,14 @@ public:
 		_Decrease();
 
 		_Ptr = new T();
-		_Count = new size_t(1);
-
 		*_Ptr = val;
+
+		_Increase();
 
 		return *this;
 	}
 
-	~Ref()
+	virtual ~Ref()
 	{
 		_Decrease();
 	}
