@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Demo.cpp" />
+    <ClCompile Include="RefCounter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RefCounter.h" />

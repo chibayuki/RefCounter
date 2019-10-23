@@ -23,5 +23,8 @@
     <ClCompile Include="Demo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="RefCounter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

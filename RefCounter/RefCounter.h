@@ -2,7 +2,7 @@
 Copyright © 2019 chibayuki@foxmail.com
 
 RefCounter
-Version 19.10.22.0000
+Version 19.10.23.0000
 
 This file is part of RefCounter
 
@@ -95,8 +95,6 @@ protected:
 		return 0;
 	}
 };
-
-map<void*, size_t> RefCounter::_Obj;
 
 // 支持引用计数与垃圾回收的指针
 template <typename T> class Ref : private RefCounter
