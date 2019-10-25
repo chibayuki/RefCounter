@@ -40,60 +40,60 @@ template <typename T> class Ref : private RefCounter
 private:
 	T* _Ptr;
 
-	_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(_Size) _VCRT_ALLOCATOR
-		void* __CRTDECL operator new(size_t _Size)
+	[[nodiscard]]
+	__declspec(allocator) void* __cdecl operator new(size_t _Size)
 	{
 		return nullptr;
 	}
 
-	_NODISCARD _Ret_maybenull_ _Success_(return != NULL) _Post_writable_byte_size_(_Size) _VCRT_ALLOCATOR
-		void* __CRTDECL operator new(size_t _Size, std::nothrow_t const&) noexcept
+	[[nodiscard]]
+	__declspec(allocator) void* __cdecl operator new(size_t _Size, std::nothrow_t const&) noexcept
 	{
 		return nullptr;
 	}
 
-	_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(_Size) _VCRT_ALLOCATOR
-		void* __CRTDECL operator new[](size_t _Size)
+	[[nodiscard]]
+	__declspec(allocator) void* __cdecl operator new[](size_t _Size)
 	{
 		return nullptr;
 	}
 
-		_NODISCARD _Ret_maybenull_ _Success_(return != NULL) _Post_writable_byte_size_(_Size) _VCRT_ALLOCATOR
-		void* __CRTDECL operator new[](size_t _Size, std::nothrow_t const&) noexcept
+	[[nodiscard]]
+	__declspec(allocator) void* __cdecl operator new[](size_t _Size, std::nothrow_t const&) noexcept
 	{
 		return nullptr;
 	}
 
-		void __CRTDECL operator delete(void* _Block) noexcept
+	void __cdecl operator delete(void* _Block) noexcept
 	{
 	}
 
-	void __CRTDECL operator delete(void* _Block, std::nothrow_t const&) noexcept
+	void __cdecl operator delete(void* _Block, std::nothrow_t const&) noexcept
 	{
 	}
 
-	void __CRTDECL operator delete[](void* _Block) noexcept
+	void __cdecl operator delete[](void* _Block) noexcept
 	{
 	}
 
-		void __CRTDECL operator delete[](void* _Block, std::nothrow_t const&) noexcept
+	void __cdecl operator delete[](void* _Block, std::nothrow_t const&) noexcept
 	{
 	}
 
-		void __CRTDECL operator delete(void* _Block, size_t _Size) noexcept
+	void __cdecl operator delete(void* _Block, size_t _Size) noexcept
 	{
 	}
 
-	void __CRTDECL operator delete[](void* _Block, size_t _Size) noexcept
+	void __cdecl operator delete[](void* _Block, size_t _Size) noexcept
 	{
 	}
 
-		inline void _Increase()
+	inline void _Attach()
 	{
 		Increase(_Ptr);
 	}
 
-	inline void _Decrease()
+	inline void _Detach()
 	{
 		if (Decrease(_Ptr) == 0 && _Ptr)
 		{
@@ -105,31 +105,31 @@ public:
 	Ref() :
 		_Ptr(nullptr)
 	{
-		_Increase();
+		_Attach();
 	}
 
 	Ref(const Ref& ref) :
 		_Ptr(ref._Ptr)
 	{
-		_Increase();
+		_Attach();
 	}
 
 	Ref(nullptr_t) :
 		_Ptr(nullptr)
 	{
-		_Increase();
+		_Attach();
 	}
 
 	Ref(T* ptr) :
 		_Ptr(ptr)
 	{
-		_Increase();
+		_Attach();
 	}
 
 	Ref(const T* ptr) :
 		_Ptr(ptr)
 	{
-		_Increase();
+		_Attach();
 	}
 
 	Ref(const T& val)
@@ -137,7 +137,7 @@ public:
 		_Ptr = new T();
 		*_Ptr = val;
 
-		_Increase();
+		_Attach();
 	}
 
 	Ref(T&& val)
@@ -145,7 +145,7 @@ public:
 		_Ptr = new T();
 		*_Ptr = val;
 
-		_Increase();
+		_Attach();
 	}
 
 	Ref& operator=(const Ref& ref)
@@ -157,12 +157,12 @@ public:
 
 		if (_Ptr != ref._Ptr)
 		{
-			_Decrease();
+			_Detach();
 
 			_Ptr = ref._Ptr;
 		}
 
-		_Increase();
+		_Attach();
 
 		return *this;
 	}
@@ -171,12 +171,12 @@ public:
 	{
 		if (_Ptr != nullptr)
 		{
-			_Decrease();
+			_Detach();
 
 			_Ptr = nullptr;
 		}
 
-		_Increase();
+		_Attach();
 
 		return *this;
 	}
@@ -185,12 +185,12 @@ public:
 	{
 		if (_Ptr != ptr)
 		{
-			_Decrease();
+			_Detach();
 
 			_Ptr = ptr;
 		}
 
-		_Increase();
+		_Attach();
 
 		return *this;
 	}
@@ -199,43 +199,43 @@ public:
 	{
 		if (_Ptr != ptr)
 		{
-			_Decrease();
+			_Detach();
 
 			_Ptr = const_cast<T*>(ptr);
 		}
 
-		_Increase();
+		_Attach();
 
 		return *this;
 	}
 
 	Ref& operator=(const T& val)
 	{
-		_Decrease();
+		_Detach();
 
 		_Ptr = new T();
 		*_Ptr = val;
 
-		_Increase();
+		_Attach();
 
 		return *this;
 	}
 
 	Ref& operator=(T&& val)
 	{
-		_Decrease();
+		_Detach();
 
 		_Ptr = new T();
 		*_Ptr = val;
 
-		_Increase();
+		_Attach();
 
 		return *this;
 	}
 
 	virtual ~Ref()
 	{
-		_Decrease();
+		_Detach();
 	}
 
 	inline bool operator==(const Ref& ref) const
@@ -303,42 +303,13 @@ public:
 		return *_Ptr;
 	}
 
-	Ref RefCopy() const
+	inline Ref RefCopy() const
 	{
 		return Ref(_Ptr);
 	}
 
-	Ref BinaryCopy() const
+	inline Ref ShallowCopy() const
 	{
-		Ref ref;
-
-		if (_Ptr)
-		{
-			ref._Decrease();
-
-			ref._Ptr = new T();
-			memcpy(ref._Ptr, _Ptr, sizeof(T));
-
-			ref._Increase();
-		}
-
-		return ref;
-	}
-
-	Ref ShallowCopy() const
-	{
-		Ref ref;
-
-		if (_Ptr)
-		{
-			ref._Decrease();
-
-			ref._Ptr = new T();
-			*ref._Ptr = *_Ptr;
-
-			ref._Increase();
-		}
-
-		return ref;
+		return Ref(*_Ptr);
 	}
 };
