@@ -52,11 +52,6 @@ private:
 	static void __cdecl operator delete[](void* _Block, size_t _Size, std::align_val_t _Al) noexcept;
 #endif
 
-	inline const RefCounter* operator&() const
-	{
-		return this;
-	}
-
 protected:
 	RefCounter();
 	RefCounter(const RefCounter&);
@@ -65,6 +60,11 @@ protected:
 
 	size_t Increase(void* ptr);
 	size_t Decrease(void* ptr);
+
+	inline const RefCounter* operator&() const
+	{
+		return this;
+	}
 
 #if DEBUG
 public:
