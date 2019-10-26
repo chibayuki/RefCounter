@@ -11,6 +11,8 @@ RefCounter is released under the GPLv3 license
 
 #pragma once
 
+#define DEBUG (1)
+
 #include <map>
 
 using namespace std;
@@ -32,6 +34,11 @@ protected:
 
 	size_t Increase(void* ptr);
 	size_t Decrease(void* ptr);
+
+#if DEBUG
+public:
+	static size_t GetCount(void* ptr);
+#endif
 };
 
 // 支持引用计数与垃圾回收的指针
@@ -114,6 +121,12 @@ public:
 		_Attach();
 	}
 
+	Ref(Ref&& ref) :
+		_Ptr(ref._Ptr)
+	{
+		ref._Ptr = nullptr;
+	}
+
 	Ref(nullptr_t) :
 		_Ptr(nullptr)
 	{
@@ -160,9 +173,22 @@ public:
 			_Detach();
 
 			_Ptr = ref._Ptr;
+
+			_Attach();
 		}
 
-		_Attach();
+		return *this;
+	}
+
+	Ref& operator=(Ref&& ref)
+	{
+		if (this == &ref)
+		{
+			return *this;
+		}
+
+		_Ptr = ref._Ptr;
+		ref._Ptr = nullptr;
 
 		return *this;
 	}
@@ -174,9 +200,9 @@ public:
 			_Detach();
 
 			_Ptr = nullptr;
-		}
 
-		_Attach();
+			_Attach();
+		}
 
 		return *this;
 	}
@@ -188,9 +214,9 @@ public:
 			_Detach();
 
 			_Ptr = ptr;
-		}
 
-		_Attach();
+			_Attach();
+		}
 
 		return *this;
 	}
@@ -202,9 +228,9 @@ public:
 			_Detach();
 
 			_Ptr = const_cast<T*>(ptr);
-		}
 
-		_Attach();
+			_Attach();
+		}
 
 		return *this;
 	}
