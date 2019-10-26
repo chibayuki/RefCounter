@@ -2,7 +2,7 @@
 Copyright © 2019 chibayuki@foxmail.com
 
 RefCounter.Demo
-Version 19.10.22.0000
+Version 19.10.26.0000
 
 This file is part of RefCounter
 
