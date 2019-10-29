@@ -2,7 +2,7 @@
 Copyright © 2019 chibayuki@foxmail.com
 
 RefCounter
-Version 19.10.26.0000
+Version 19.10.29.0000
 
 This file is part of RefCounter
 
@@ -131,17 +131,19 @@ public:
 	Ref(const T& val)
 	{
 		_Ptr = new T();
-		*_Ptr = val;
 
 		_Attach();
+
+		*_Ptr = val;
 	}
 
 	Ref(T&& val)
 	{
 		_Ptr = new T();
-		*_Ptr = val;
 
 		_Attach();
+
+		*_Ptr = val;
 	}
 
 	Ref& operator=(const Ref& ref)
@@ -170,8 +172,12 @@ public:
 			return *this;
 		}
 
+		_Detach();
+
 		_Ptr = ref._Ptr;
 		ref._Ptr = nullptr;
+
+		_Attach();
 
 		return *this;
 	}
@@ -220,24 +226,32 @@ public:
 
 	Ref& operator=(const T& val)
 	{
-		_Detach();
+		if (_Ptr == nullptr)
+		{
+			_Detach();
 
-		_Ptr = new T();
+			_Ptr = new T();
+
+			_Attach();
+		}
+
 		*_Ptr = val;
-
-		_Attach();
 
 		return *this;
 	}
 
 	Ref& operator=(T&& val)
 	{
-		_Detach();
+		if (_Ptr == nullptr)
+		{
+			_Detach();
 
-		_Ptr = new T();
+			_Ptr = new T();
+
+			_Attach();
+		}
+
 		*_Ptr = val;
-
-		_Attach();
 
 		return *this;
 	}
