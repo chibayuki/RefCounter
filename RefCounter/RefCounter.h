@@ -2,7 +2,7 @@
 Copyright © 2019 chibayuki@foxmail.com
 
 RefCounter
-Version 19.10.29.0000
+Version 19.12.5.0000
 
 This file is part of RefCounter
 
@@ -329,6 +329,11 @@ public:
 	inline explicit operator bool() const
 	{
 		return (_Ptr != nullptr);
+	}
+
+	inline bool operator !() const
+	{
+		return (_Ptr == nullptr);
 	}
 
 	inline Ref RefCopy() const
